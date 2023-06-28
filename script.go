@@ -21,6 +21,7 @@ import (
 var (
 	connShort = true
 	closeFlag = "close"
+	URL       = ""
 )
 
 func createClient(short bool) *http.Client {
@@ -39,7 +40,7 @@ func requestServer(count int, ch chan<- string) {
 	// 短连接测试
 	client := createClient(connShort)
 	for i := 0; i < count; i++ {
-		resp, err := client.Get("http://[2406:da14:f5e:e001:e075::]")
+		resp, err := client.Get(URL)
 		if err != nil {
 			ch <- fmt.Sprint(err)
 			continue
@@ -52,13 +53,23 @@ func requestServer(count int, ch chan<- string) {
 }
 
 func main() {
+	// f, _ := os.OpenFile("cpu.profile", os.O_CREATE|os.O_RDWR, 0644)
+	// defer f.Close()
+	// pprof.StartCPUProfile(f)
+	// defer pprof.StopCPUProfile()
 	var worker, count int
 	var shortFlag bool
 	flag.IntVar(&worker, "worker", 10, "协程数")
 	flag.IntVar(&count, "count", 10000, "每个协程请求数")
 	flag.BoolVar(&shortFlag, "short", true, "使用短连接")
+	flag.StringVar(&URL, "url", "", "测试URL")
 	flag.Parse()
 	connShort = shortFlag
+	if URL == "" {
+		fmt.Println("url need!")
+		return
+	}
+	fmt.Printf("测试: url: %s, %d worker, 单worker循环 %d 次，使用短连接：%v\n", URL, worker, count, connShort)
 	ch := make(chan string)
 	//开始计时
 	begin := time.Now()
